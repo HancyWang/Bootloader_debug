@@ -230,8 +230,7 @@
             // 
             // timer_send
             // 
-            this.timer_send.Enabled = true;
-            this.timer_send.Interval = 45;
+            this.timer_send.Interval = 60;
             this.timer_send.Tick += new System.EventHandler(this.timer_send_Tick);
             // 
             // button_start
