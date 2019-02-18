@@ -43,6 +43,10 @@ namespace Bootloader_debug
         private int m_stop_cnt = 0;         //传输中断计数
         private int m_prev_send_cnt = -1;
 
+
+        private int BOOT_ERASE_CMD = 0x43;
+
+
         //dubeg专用
         //private byte test_bt = 0x00;
         //private string test_str = "";
@@ -429,11 +433,16 @@ namespace Bootloader_debug
                         //    this.label_cnt.Text = (m_current_write_cnt).ToString() + "/" + m_total_to_be_written_num.ToString();
                         //}
                         #endregion
-                                                //m_send_step = SEND_STEP.STEP_READ;
+                        //m_send_step = SEND_STEP.STEP_READ;
                         if (m_total_to_be_written_num == m_current_write_cnt)
                         {
-                            m_current_write_cnt = 0;
+                            
                             m_send_step = SEND_STEP.STEP_FINISH;
+
+                            byte[] reset_buffer = new byte[] { 0x21, 0xDE, 0x08, 0x00, 0x00, 0x00, 0x08 };
+                            this.serialPort1.Write(reset_buffer, 0, Convert.ToInt32(reset_buffer.Length));
+
+                            m_current_write_cnt = 0;
 
                             m_strLog_list.RemoveAt(m_strLog_list.Count - 1);
                             m_strLog_list.Add("Update Finished!");
@@ -446,6 +455,18 @@ namespace Bootloader_debug
                             m_send_step = SEND_STEP.STEP_WRITE;
                             send_data_by(m_send_step);
                             m_current_write_cnt++;  //收到应答表示接收成功， 计数加1
+
+                            //if (m_current_write_cnt == m_total_to_be_written_num - 1)
+                            //{
+                            //    byte[] reset_buffer = new byte[] { 0x21, 0xDE, 0x08, 0x00, 0x00, 0x00, 0x08 };
+                            //    this.serialPort1.Write(reset_buffer, 0, Convert.ToInt32(reset_buffer.Length));
+                            //}
+                            //else
+                            //{
+                            //    m_send_step = SEND_STEP.STEP_WRITE;
+                            //    send_data_by(m_send_step);
+                            //    m_current_write_cnt++;  //收到应答表示接收成功， 计数加1
+                            //}
                         }
 
                         this.progressBar1.Value = m_current_write_cnt;
@@ -605,14 +626,36 @@ namespace Bootloader_debug
             }
             else if (m_send_step == SEND_STEP.STEP_ERASE1)            //第六步，擦除芯片，先发送44 BB //擦除必须要分开发
             {
-                buffer = new byte[] { 0x44, 0xBB };
-                //buffer = new byte[] { 0x43, 0xBC };
+                if (BOOT_ERASE_CMD == 0x43)
+                {
+                    buffer = new byte[] { 0x43, 0xBC };
+                }
+                else if (BOOT_ERASE_CMD == 0x44)
+                {
+                    buffer = new byte[] { 0x44, 0xBB };
+                }
+                else
+                {
+                    //do nothing
+                }
+                
                 this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
             }
             else if (m_send_step == SEND_STEP.STEP_ERASE2)            //第六步，擦除芯片，再发送FF FF 00
             {
-                buffer = new byte[] { 0xFF, 0xFF, 0x00 };
-                //buffer = new byte[] { 0xFF, 0x00 };
+                if (BOOT_ERASE_CMD == 0x43)
+                {
+                    buffer = new byte[] { 0xFF, 0x00 };
+                }
+                else if (BOOT_ERASE_CMD == 0x44)
+                {
+                    buffer = new byte[] { 0xFF, 0xFF, 0x00 };
+                }
+                else
+                {
+                    //do nothing
+                }
+
                 this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
             }
             else if (m_send_step == SEND_STEP.STEP_WRITE)            //核心部分，循环写入hex文件，每次写入64字节，然后读取该64字节核对
@@ -670,10 +713,6 @@ namespace Bootloader_debug
                             }
                             else
                             {
-                                //if (m_shift_pos + i - 1 > m_write_list.Count)
-                                //{
-                                //    MessageBox.Show("err");
-                                //}
                                 //填充256个字节
                                 data_buffer[i] = m_write_list[shift_pos + i - 1];
                                 buffer[7 + i] = data_buffer[i];
@@ -785,9 +824,25 @@ namespace Bootloader_debug
 
         private void button_start_Click(object sender, EventArgs e)
         {
-            //m_b_startSending = true;
+            //if (m_b_load_hex_file_success)
+            //{
+            //    //m_b_startSending = true;
+            //    Init_member_var();
+
+            //    m_send_step = SEND_STEP.STEP1;
+            //    send_data_by(m_send_step);
+            //}
+            //else
+            //{
+            //    MessageBox.Show("Please load hex file first!");
+            //}
+
+
+            //Init_member_var();
+
             m_send_step = SEND_STEP.STEP1;
             send_data_by(m_send_step);
+
         }
 
         private void Init_member_var()
@@ -800,7 +855,7 @@ namespace Bootloader_debug
             m_buffer.Clear();
             m_write_list.Clear();
 
-            m_b_load_hex_file_success = false;
+            //m_b_load_hex_file_success = false;
             m_current_Address = 0x00;
             m_current_write_cnt = 0;
             m_total_to_be_written_num = 0;
@@ -812,7 +867,6 @@ namespace Bootloader_debug
         {
             if (this.openFileDialog1.ShowDialog() == DialogResult.OK)
             {
-
                 Init_member_var();
 
                 #region
@@ -832,7 +886,6 @@ namespace Bootloader_debug
                 //解析HHX文件
                 Parse_Hex_2_bin_list();
 
-                //if (m_hex_file_list.Count == len)
                 if (m_hex_file_list.Count == hex_len)   
                 {
                     if (m_send_step == SEND_STEP.STEP_PENDING_HEX_FILE_LOADED)  //状态切换
@@ -849,11 +902,23 @@ namespace Bootloader_debug
                     //MessageBox.Show(Convert.ToString(m_64Bytes_written_cnt));
 
                     //将数据存入write_list中
+                   
                     for (int i = 0; i < m_datas_list.Count; i++)
                     {
                         for (int j = 0; j < 16; j++)
                         {
                             m_write_list.Add(m_datas_list[i][j]);
+                        }
+                    }
+
+                    int left = m_write_list.Count % WRITE_STEP;
+                  
+                    if (left != 0)
+                    {
+                        byte bt = 0xFF;
+                        for (int i = 0; i < WRITE_STEP- left; i++)
+                        {
+                            m_write_list.Add(bt);
                         }
                     }
 
@@ -1035,6 +1100,10 @@ namespace Bootloader_debug
             if (this.comboBox_serial_port_baut_rate.Text == "115200")
             {
                 this.serialPort1.BaudRate = 115200;
+            }
+            else if (this.comboBox_serial_port_baut_rate.Text == "460800")
+            {
+                this.serialPort1.BaudRate = 460800;
             }
             else if (this.comboBox_serial_port_baut_rate.Text == "57600")
             {

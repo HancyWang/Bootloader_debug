@@ -107,36 +107,40 @@
             // comboBox_serial_port_flow_control
             // 
             this.comboBox_serial_port_flow_control.FormattingEnabled = true;
-            this.comboBox_serial_port_flow_control.Location = new System.Drawing.Point(172, 332);
+            this.comboBox_serial_port_flow_control.Location = new System.Drawing.Point(172, 338);
             this.comboBox_serial_port_flow_control.Name = "comboBox_serial_port_flow_control";
             this.comboBox_serial_port_flow_control.Size = new System.Drawing.Size(121, 23);
             this.comboBox_serial_port_flow_control.TabIndex = 25;
+            this.comboBox_serial_port_flow_control.Visible = false;
             // 
             // comboBox_serial_port_parity
             // 
             this.comboBox_serial_port_parity.FormattingEnabled = true;
             this.comboBox_serial_port_parity.Items.AddRange(new object[] {
             "Odd"});
-            this.comboBox_serial_port_parity.Location = new System.Drawing.Point(172, 279);
+            this.comboBox_serial_port_parity.Location = new System.Drawing.Point(172, 302);
             this.comboBox_serial_port_parity.Name = "comboBox_serial_port_parity";
             this.comboBox_serial_port_parity.Size = new System.Drawing.Size(121, 23);
             this.comboBox_serial_port_parity.TabIndex = 24;
+            this.comboBox_serial_port_parity.Visible = false;
             // 
             // comboBox_serial_port_stop_bits
             // 
             this.comboBox_serial_port_stop_bits.FormattingEnabled = true;
-            this.comboBox_serial_port_stop_bits.Location = new System.Drawing.Point(172, 219);
+            this.comboBox_serial_port_stop_bits.Location = new System.Drawing.Point(172, 267);
             this.comboBox_serial_port_stop_bits.Name = "comboBox_serial_port_stop_bits";
             this.comboBox_serial_port_stop_bits.Size = new System.Drawing.Size(121, 23);
             this.comboBox_serial_port_stop_bits.TabIndex = 23;
+            this.comboBox_serial_port_stop_bits.Visible = false;
             // 
             // comboBox_serial_port_data_bits
             // 
             this.comboBox_serial_port_data_bits.FormattingEnabled = true;
-            this.comboBox_serial_port_data_bits.Location = new System.Drawing.Point(172, 163);
+            this.comboBox_serial_port_data_bits.Location = new System.Drawing.Point(172, 233);
             this.comboBox_serial_port_data_bits.Name = "comboBox_serial_port_data_bits";
             this.comboBox_serial_port_data_bits.Size = new System.Drawing.Size(121, 23);
             this.comboBox_serial_port_data_bits.TabIndex = 22;
+            this.comboBox_serial_port_data_bits.Visible = false;
             // 
             // comboBox_serial_port_baut_rate
             // 
@@ -146,8 +150,9 @@
             "38400",
             "56000",
             "57600",
-            "115200"});
-            this.comboBox_serial_port_baut_rate.Location = new System.Drawing.Point(172, 103);
+            "115200",
+            "460800"});
+            this.comboBox_serial_port_baut_rate.Location = new System.Drawing.Point(172, 136);
             this.comboBox_serial_port_baut_rate.Name = "comboBox_serial_port_baut_rate";
             this.comboBox_serial_port_baut_rate.Size = new System.Drawing.Size(121, 23);
             this.comboBox_serial_port_baut_rate.TabIndex = 21;
@@ -156,7 +161,7 @@
             // comboBox_serial_port_name
             // 
             this.comboBox_serial_port_name.FormattingEnabled = true;
-            this.comboBox_serial_port_name.Location = new System.Drawing.Point(172, 47);
+            this.comboBox_serial_port_name.Location = new System.Drawing.Point(172, 57);
             this.comboBox_serial_port_name.Name = "comboBox_serial_port_name";
             this.comboBox_serial_port_name.Size = new System.Drawing.Size(121, 23);
             this.comboBox_serial_port_name.TabIndex = 20;
@@ -165,43 +170,47 @@
             // label16
             // 
             this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(26, 335);
+            this.label16.Location = new System.Drawing.Point(26, 341);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(111, 15);
             this.label16.TabIndex = 19;
             this.label16.Text = "Flow Control:";
+            this.label16.Visible = false;
             // 
             // label15
             // 
             this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(26, 282);
+            this.label15.Location = new System.Drawing.Point(26, 305);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(63, 15);
             this.label15.TabIndex = 18;
             this.label15.Text = "Parity:";
+            this.label15.Visible = false;
             // 
             // label14
             // 
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(26, 222);
+            this.label14.Location = new System.Drawing.Point(26, 270);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(87, 15);
             this.label14.TabIndex = 17;
             this.label14.Text = "Stop Bits:";
+            this.label14.Visible = false;
             // 
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(25, 165);
+            this.label13.Location = new System.Drawing.Point(25, 235);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(87, 15);
             this.label13.TabIndex = 16;
             this.label13.Text = "Data Bits:";
+            this.label13.Visible = false;
             // 
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(26, 106);
+            this.label12.Location = new System.Drawing.Point(26, 139);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(87, 15);
             this.label12.TabIndex = 15;
@@ -210,7 +219,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(25, 50);
+            this.label11.Location = new System.Drawing.Point(25, 60);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(87, 15);
             this.label11.TabIndex = 14;
