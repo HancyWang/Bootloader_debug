@@ -27,7 +27,7 @@ namespace Bootloader_debug
         //private Dictionary<int, List<byte>> m_dic_datas_list = new Dictionary<int, List<byte>>();
 
         
-        private List<byte> m_bin_list = new List<byte>();               //用来存放解析hex之后的bin
+        //private List<byte> m_bin_list = new List<byte>();               //用来存放解析hex之后的bin
         private List<string> m_strLog_list = new List<string>();        //用来存放log
 
         private const int START_ADDRESS = 0x08000000;                          //写入的起始地址
@@ -35,16 +35,18 @@ namespace Bootloader_debug
         private int m_current_Address = 0x00;
         private long m_total_to_be_written_num = 0;                           //总共要写入的次数
         private int m_current_write_cnt = 0;                             //记录当前写入的次数
-        private int m_write_fail_cnt = 0;
+        private int m_send_fail_cnt = 0;
+        private int m_pre_send_fail_cnt = 0;
 
         //private int m_shift_pos = 0;
         private List<byte> m_write_list = new List<byte>();
 
         private int m_stop_cnt = 0;         //传输中断计数
         private int m_prev_send_cnt = -1;
+        private bool m_data_sending_abort = false;
 
 
-        private int BOOT_ERASE_CMD = 0x43;
+        private int m_BOOT_ERASE_CMD = 0x43;
 
 
         //dubeg专用
@@ -58,6 +60,9 @@ namespace Bootloader_debug
         private enum SEND_STEP
         {
             STEP_NONE,
+            STEP_PRE_SEND_FAIL,    //预发送失败
+            STEP_SEND_FAIL,        //发送过程中失败
+            STEP_RESET,
             STEP1,
             STEP2,
             STEP3,
@@ -108,7 +113,7 @@ namespace Bootloader_debug
                 this.comboBox_serial_port_name.SelectedIndex = 0;
             }
 
-            this.comboBox_serial_port_baut_rate.Text = "115200";
+            this.comboBox_serial_port_baut_rate.Text = "460800";
             this.comboBox_serial_port_data_bits.Text = "8";
             this.comboBox_serial_port_stop_bits.Text = "1";
             this.comboBox_serial_port_parity.Text = "Odd";
@@ -134,29 +139,10 @@ namespace Bootloader_debug
 
         private void timer_serial_port_checking_Tick(object sender, EventArgs e)
         {
-            //debug
-            #region
-            if (m_current_write_cnt>=10)
+            if(m_b_serialPortOpened)  //如果串口已经连接，不要再检测是否还有串口增加和减少了
             {
-                if (m_stop_cnt == 50)
-                {
-                    m_stop_cnt = 0;
-                    //MessageBox.Show("wrong");
-                }
-                else
-                {
-                    if (m_prev_send_cnt == m_current_write_cnt)
-                    {
-                        m_stop_cnt++;
-                    }
-                    else
-                    {
-                        m_stop_cnt = 0;
-                        m_prev_send_cnt = m_current_write_cnt;
-                    }
-                }
+                return;
             }
-            #endregion
 
             string[] names = SerialPort.GetPortNames();   //获取当前serial port端口名称
 
@@ -196,6 +182,35 @@ namespace Bootloader_debug
             Array.Sort(names, (a, b) => Convert.ToInt32(((string)a).Substring(3)).CompareTo(Convert.ToInt32(((string)b).Substring(3))));
             this.comboBox_serial_port_name.Items.AddRange(names);
             this.comboBox_serial_port_name.SelectedIndex = 0;
+        }
+
+
+        private bool IsSendingAbort()
+        {
+            bool res = false;
+            if (m_current_write_cnt >= 10)
+            {
+                if (m_stop_cnt == 5)
+                {
+                    m_stop_cnt = 0;
+                    m_prev_send_cnt = -1;
+                    //MessageBox.Show("disconnect");
+                    res = true;
+                }
+                else
+                {
+                    if (m_prev_send_cnt == m_current_write_cnt)
+                    {
+                        m_stop_cnt++;
+                    }
+                    else
+                    {
+                        m_stop_cnt = 0;
+                        m_prev_send_cnt = m_current_write_cnt;
+                    }
+                }
+            }
+            return res;
         }
 
         private void button_serial_port_connect_Click(object sender, EventArgs e)
@@ -258,25 +273,49 @@ namespace Bootloader_debug
             {
                 m_buffer.AddRange(tmp);   //将tmp中的数据装入m_buffer中
                 #region
-                if (m_send_step == SEND_STEP.STEP1)
+                if(m_send_step==SEND_STEP.STEP_RESET)
+                {
+                    if (m_buffer.Count == 2 && m_buffer[0] == 0x79 && m_buffer[1] == 0x79)
+                    {
+                        m_send_step = SEND_STEP.STEP1;
+                        m_buffer.Clear();
+                        send_data_by(m_send_step);
+                    }
+                    else
+                    {
+                        m_buffer.Clear();
+                        send_data_by(SEND_STEP.STEP_RESET);
+                    }
+                    
+                }
+                else if (m_send_step == SEND_STEP.STEP1)
                 {
                     if (m_buffer[0] == 0x79)   //如果是79，就接收数据
                     {
-                        m_send_step = SEND_STEP.STEP2;      //如果接收到79，直接进入到第二步
+                        m_send_step = SEND_STEP.STEP2;      //如果接收到79，直接进入到第二步   
                     }
+                    else
+                    {
+                        //do nothing
+                        //m_pre_send_fail_cnt++;
+                    }
+
                     m_buffer.RemoveAt(0);
                     send_data_by(m_send_step);
+
                 }
                 else if (m_send_step == SEND_STEP.STEP2)   //获取version+cmd
                 {
                     if (m_buffer.Count == 15)
                     {
+                        m_BOOT_ERASE_CMD = m_buffer[9];  //获取擦除命令
+
                         string strTmp = "Command available: ";
                         for (int i = 0; i < m_buffer.Count; i++)
                         {
                             strTmp += m_buffer[i].ToString("X2") + " ";
                         }
-                        m_strLog_list.Add(strTmp);
+                        //m_strLog_list.Add(strTmp);
 
                         m_buffer.Clear();
                         show_log();
@@ -295,7 +334,7 @@ namespace Bootloader_debug
                             strTmp += m_buffer[i].ToString("X2") + " ";
                         }
                         m_strLog_list.Add(strTmp);
-                        
+
                         m_buffer.Clear();
                         show_log();
 
@@ -313,7 +352,7 @@ namespace Bootloader_debug
                             strTmp += m_buffer[i].ToString("X2") + " ";
                         }
                         m_strLog_list.Add(strTmp);
-                        
+
                         m_buffer.Clear();
                         show_log();
 
@@ -394,17 +433,26 @@ namespace Bootloader_debug
                     {
                         m_buffer.Clear();
 
-                        string str_success = "Erase MCU successful!"+"\r\nStaring update...";
-                        m_strLog_list.Add(str_success);
-                        show_log();
+                        if (m_b_load_hex_file_success)
+                        {
+                            string str_success = "Erase MCU successful!" + "\r\nStaring update...";
+                            m_strLog_list.Add(str_success);
+                            show_log();
 
-                        m_send_step = SEND_STEP.STEP_WRITE;
-                        send_data_by(m_send_step);
-                        m_current_write_cnt++;
+                            m_send_step = SEND_STEP.STEP_WRITE;
+                            send_data_by(m_send_step);
+                            m_current_write_cnt++;
+                        }
+                        else
+                        {
+                            m_send_step = SEND_STEP.STEP_PENDING_HEX_FILE_LOADED;
+                            m_strLog_list.Add("Pending load hex file...");
+                            show_log();
+                        }
                     }
                     else
                     {
-                        m_send_step = SEND_STEP.STEP_NONE;
+                        m_send_step = SEND_STEP.STEP_PRE_SEND_FAIL;
 
                         m_buffer.Clear();
                         string str_fail = "Erase MCU fail!";
@@ -436,18 +484,18 @@ namespace Bootloader_debug
                         //m_send_step = SEND_STEP.STEP_READ;
                         if (m_total_to_be_written_num == m_current_write_cnt)
                         {
-                            
+
                             m_send_step = SEND_STEP.STEP_FINISH;
 
-                            byte[] reset_buffer = new byte[] { 0x21, 0xDE, 0x08, 0x00, 0x00, 0x00, 0x08 };
-                            this.serialPort1.Write(reset_buffer, 0, Convert.ToInt32(reset_buffer.Length));
+                            send_data_by(SEND_STEP.STEP_RESET);
 
-                            m_current_write_cnt = 0;
+                            //m_current_write_cnt = 0;
 
                             m_strLog_list.RemoveAt(m_strLog_list.Count - 1);
                             m_strLog_list.Add("Update Finished!");
                             show_log();
-                            MessageBox.Show("finish");
+
+                            MessageBox.Show("Update Finished!");
                         }
                         else
                         {
@@ -470,7 +518,8 @@ namespace Bootloader_debug
                         }
 
                         this.progressBar1.Value = m_current_write_cnt;
-                        this.label_cnt.Text = (m_current_write_cnt).ToString() + "/" + m_total_to_be_written_num.ToString();
+                        this.label_cnt.Text = (m_current_write_cnt*100/ m_total_to_be_written_num).ToString() +" " +
+                            (m_current_write_cnt).ToString() + "/" + m_total_to_be_written_num.ToString();
                     }
                     else if (m_buffer.Count == 3 && m_buffer[0] == 0x79 && m_buffer[1] == 0x79 && m_buffer[2] == 0x1F)
                     {
@@ -561,6 +610,7 @@ namespace Bootloader_debug
             }
         }
 
+
         private void show_log()
         {
             string str = "";
@@ -571,66 +621,72 @@ namespace Bootloader_debug
             this.richTextBox1.Text = str;
         }
 
-        private void timer_send_Tick(object sender, EventArgs e)
-        {
-            //if(m_b_serialPortOpened==false)             //如果串口没开，直接return
-            //{
-            //    return;
-            //}
-
-            //if (m_b_startSending)                       //按钮点击了发送
-            //{
-            //    send_data_by(m_send_step);
-            //}
-        }
 
         private void send_data_by(SEND_STEP step)
         {
+            if (!this.serialPort1.IsOpen)
+            {
+                return;
+            }
+
+            if(m_b_serialPortOpened==false)
+            {
+                //MessageBox.Show("Serial port disconnect!");
+
+                m_send_step = SEND_STEP.STEP_SEND_FAIL;
+                return;
+            }
+
             byte[] buffer = null;
-            if (m_send_step == SEND_STEP.STEP1)                 //第一步，发送0x7F
+            if (step == SEND_STEP.STEP_RESET)   //作用: bootlader失败的时候，点按钮继续，先要reset，否则无法发送7F
+            {
+                buffer = new byte[] { 0x21, 0xDE, 0x08, 0x00, 0x00, 0x00, 0x08 };
+                this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
+            }
+            else if (step == SEND_STEP.STEP1)                 //第一步，发送0x7F
             {
                 buffer = new byte[1];
                 buffer[0] = 0x7F;
                 this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
             }
-            else if (m_send_step == SEND_STEP.STEP2)            //第二步，发送00 FF,获取Version+Command
+            else if (step == SEND_STEP.STEP2)            //第二步，发送00 FF,获取Version+Command
             {
                 buffer = new byte[2];
                 buffer[0] = 0x00;
                 buffer[1] = 0xFF;
                 this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
             }
-            else if (m_send_step == SEND_STEP.STEP3)          //第三步， 发送01 FE,获取版本号
+            else if (step == SEND_STEP.STEP3)          //第三步， 发送01 FE,获取版本号
             {
                 buffer = new byte[2];
                 buffer[0] = 0x01;
                 buffer[1] = 0xFE;
                 this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
             }
-            else if (m_send_step == SEND_STEP.STEP4)          //第四步， 发送02 FD,获取芯片PID
+            else if (step == SEND_STEP.STEP4)          //第四步， 发送02 FD,获取芯片PID
             {
                 buffer = new byte[2];
                 buffer[0] = 0x02;
                 buffer[1] = 0xFD;
                 this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
             }
-            else if (m_send_step == SEND_STEP.STEP5_1)          //第五步， 1>发送11 EE 1F FF F7 E0 F7 13 EC,读取指定内存
+            else if (step == SEND_STEP.STEP5_1)          //第五步， 1>发送11 EE 1F FF F7 E0 F7 13 EC,读取指定内存
             {
                 buffer = new byte[] { 0x11, 0xEE, 0x1F, 0xFF, 0xF7, 0xE0, 0xF7, 0x13, 0xEC };
                 this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
             }
-            else if (m_send_step == SEND_STEP.STEP5_2)          //第五步， 2>发送11 EE 1F FF F8 00 18 0F F0读取指定内存
+            else if (step == SEND_STEP.STEP5_2)          //第五步， 2>发送11 EE 1F FF F8 00 18 0F F0读取指定内存
             {
                 buffer = new byte[] { 0x11, 0xEE, 0x1F, 0xFF, 0xF8, 0x00, 0x18, 0x0F, 0xF0 };
                 this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
             }
-            else if (m_send_step == SEND_STEP.STEP_ERASE1)            //第六步，擦除芯片，先发送44 BB //擦除必须要分开发
+            else if (step == SEND_STEP.STEP_ERASE1)            //第六步，擦除芯片，先发送44 BB //擦除必须要分开发
             {
-                if (BOOT_ERASE_CMD == 0x43)
+                if (m_BOOT_ERASE_CMD == 0x43)
                 {
                     buffer = new byte[] { 0x43, 0xBC };
                 }
-                else if (BOOT_ERASE_CMD == 0x44)
+                else if (m_BOOT_ERASE_CMD == 0x44)
                 {
                     buffer = new byte[] { 0x44, 0xBB };
                 }
@@ -641,13 +697,13 @@ namespace Bootloader_debug
                 
                 this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
             }
-            else if (m_send_step == SEND_STEP.STEP_ERASE2)            //第六步，擦除芯片，再发送FF FF 00
+            else if (step == SEND_STEP.STEP_ERASE2)            //第六步，擦除芯片，再发送FF FF 00
             {
-                if (BOOT_ERASE_CMD == 0x43)
+                if (m_BOOT_ERASE_CMD == 0x43)
                 {
                     buffer = new byte[] { 0xFF, 0x00 };
                 }
-                else if (BOOT_ERASE_CMD == 0x44)
+                else if (m_BOOT_ERASE_CMD == 0x44)
                 {
                     buffer = new byte[] { 0xFF, 0xFF, 0x00 };
                 }
@@ -658,7 +714,7 @@ namespace Bootloader_debug
 
                 this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
             }
-            else if (m_send_step == SEND_STEP.STEP_WRITE)            //核心部分，循环写入hex文件，每次写入64字节，然后读取该64字节核对
+            else if (step == SEND_STEP.STEP_WRITE)            //核心部分，循环写入hex文件，每次写入64字节，然后读取该64字节核对
             {
                 if (m_b_load_hex_file_success)             //如果载入文件成功
                 {
@@ -765,15 +821,13 @@ namespace Bootloader_debug
                         //m_strLog_list.Add(m_current_write_cnt.ToString() + @"/" + m_total_to_be_written_num.ToString());
                         //show_log();
                         //m_strLog_list.RemoveAt(m_strLog_list.Count - 1);
+
+                   
+
                     }
                 }
-                else
-                {
-                    m_send_step = SEND_STEP.STEP_PENDING_HEX_FILE_LOADED;
-                    MessageBox.Show("Please load your hex file!");
-                }
             }
-            else if (m_send_step == SEND_STEP.STEP_READ)     //发送命令读取上一次的数据
+            else if (step == SEND_STEP.STEP_READ)     //发送命令读取上一次的数据
             {
                 //读取上一次write的数据   11 EE 08 00 00 00 08 3F C0
                 buffer = new byte[9];
@@ -824,34 +878,61 @@ namespace Bootloader_debug
 
         private void button_start_Click(object sender, EventArgs e)
         {
-            //if (m_b_load_hex_file_success)
-            //{
-            //    //m_b_startSending = true;
-            //    Init_member_var();
+            if (!m_b_serialPortOpened)  //如果串口没打开
+            {
+                MessageBox.Show("Please connect serial port!");
+            }
+            else                       //串口打开才可以发送
+            {
+                label_cnt.Text = "0/0";
 
-            //    m_send_step = SEND_STEP.STEP1;
-            //    send_data_by(m_send_step);
-            //}
-            //else
-            //{
-            //    MessageBox.Show("Please load hex file first!");
-            //}
+                m_strLog_list.Clear();
+                show_log();
 
+                m_buffer.Clear();
+                //m_write_list.Clear();
+                //m_b_load_hex_file_success = false;
+                m_current_Address = 0x00;
 
-            //Init_member_var();
+                m_current_write_cnt = 0;
+                this.progressBar1.Value = m_current_write_cnt;
 
-            m_send_step = SEND_STEP.STEP1;
-            send_data_by(m_send_step);
+                //m_total_to_be_written_num = 0;
+                m_stop_cnt = 0;
+                m_prev_send_cnt = -1;
 
+                //if (m_data_sending_abort)
+                //{
+                //    m_send_step = SEND_STEP.STEP_RESET;
+                //}
+
+                //m_data_sending_abort = false;
+
+                if (m_send_step == SEND_STEP.STEP_SEND_FAIL) //如果发送失败，必须要先
+                {
+                    m_send_step = SEND_STEP.STEP_RESET;
+                }
+                else
+                {
+                    m_send_step = SEND_STEP.STEP1;
+                }
+
+                send_data_by(m_send_step);
+            }
         }
 
         private void Init_member_var()
         {
             m_hex_file_list.Clear();
-            m_bin_list.Clear();
+            //m_bin_list.Clear();
 
             m_datas_list.Clear();
-            m_strLog_list.Clear();
+
+            if (m_send_step != SEND_STEP.STEP_PENDING_HEX_FILE_LOADED)
+            {
+                m_strLog_list.Clear();
+            }
+                
             m_buffer.Clear();
             m_write_list.Clear();
 
@@ -861,6 +942,8 @@ namespace Bootloader_debug
             m_total_to_be_written_num = 0;
             m_stop_cnt = 0;
             m_prev_send_cnt = -1;
+
+            m_data_sending_abort = false;
         }
 
         private void button_load_hex_file_Click(object sender, EventArgs e)
@@ -888,10 +971,6 @@ namespace Bootloader_debug
 
                 if (m_hex_file_list.Count == hex_len)   
                 {
-                    if (m_send_step == SEND_STEP.STEP_PENDING_HEX_FILE_LOADED)  //状态切换
-                    {
-                        m_send_step = SEND_STEP.STEP_WRITE;
-                    }
                     m_b_load_hex_file_success = true;
 
                     //计算要发送多少个64字节
@@ -922,8 +1001,19 @@ namespace Bootloader_debug
                         }
                     }
 
+                    if (m_send_step == SEND_STEP.STEP_PENDING_HEX_FILE_LOADED)  //状态切换
+                    {
+                        m_send_step = SEND_STEP.STEP_WRITE;
+                        send_data_by(m_send_step);
+                        m_current_write_cnt++;
+                        //m_strLog_list.RemoveAt(m_strLog_list.Count - 1);
+                    }
+
+                    m_strLog_list.Add("Hex File loaded successful!");
+                    show_log();
+
                     //MessageBox.Show("Load file successful!" + "16*" + m_datas_list.Count.ToString());
-                    MessageBox.Show("Load file successful!");
+                    //MessageBox.Show("Load file successful!");
                     //MessageBox.Show(m_datas_list.Count.ToString());
                 }
                 else
@@ -936,7 +1026,6 @@ namespace Bootloader_debug
                 br.Close();
                 fs.Close();
 
-               
                 #endregion
             }
         }
@@ -1125,6 +1214,55 @@ namespace Bootloader_debug
             {
                 //do nothing
             }
+        }
+
+        private void serialPort1_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
+        {
+            MessageBox.Show("serial port error!");
+        }
+
+        private void timer_monitor_Tick(object sender, EventArgs e)
+        {
+            //考虑一种情况，拔掉串口硬件，此时是标志位为true,而serialPort1已经关闭
+            if (m_b_serialPortOpened && !this.serialPort1.IsOpen)
+            {
+                this.button_serial_port_connect.Text = "CONNECT";
+                this.serialPort1.Close();
+                m_b_serialPortOpened = false;
+                LoadPicture();
+
+                this.comboBox_serial_port_name.Enabled = true;
+                this.comboBox_serial_port_baut_rate.Enabled = true;
+                this.comboBox_serial_port_data_bits.Enabled = true;
+                this.comboBox_serial_port_flow_control.Enabled = true;
+                this.comboBox_serial_port_parity.Enabled = true;
+                this.comboBox_serial_port_stop_bits.Enabled = true;
+
+                MessageBox.Show("Disconnect!");
+            }
+
+            //监测数据传输是否正常，如果一段时间没有数据
+            #region
+            if (m_send_step == SEND_STEP.STEP_FINISH)
+            {
+                return;
+            }
+            else
+            {
+                if (!m_data_sending_abort)
+                {
+                    if (IsSendingAbort())
+                    {
+                        m_data_sending_abort = true;
+                        m_send_step = SEND_STEP.STEP_SEND_FAIL;
+
+                        m_strLog_list.Add("Updating abort...");
+                        show_log();
+                        MessageBox.Show("Updating abort...");
+                    }
+                }
+            }
+            #endregion
         }
     }
 }

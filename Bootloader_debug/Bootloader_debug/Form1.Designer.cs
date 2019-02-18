@@ -47,7 +47,6 @@
             this.label11 = new System.Windows.Forms.Label();
             this.timer_serial_port_checking = new System.Windows.Forms.Timer(this.components);
             this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
-            this.timer_send = new System.Windows.Forms.Timer(this.components);
             this.button_start = new System.Windows.Forms.Button();
             this.textBox_file_path = new System.Windows.Forms.TextBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
@@ -56,6 +55,7 @@
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.label_cnt = new System.Windows.Forms.Label();
+            this.timer_monitor = new System.Windows.Forms.Timer(this.components);
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_serial_port_connecting)).BeginInit();
             this.groupBox2.SuspendLayout();
@@ -235,18 +235,14 @@
             // 
             this.serialPort1.BaudRate = 115200;
             this.serialPort1.Parity = System.IO.Ports.Parity.Odd;
+            this.serialPort1.ErrorReceived += new System.IO.Ports.SerialErrorReceivedEventHandler(this.serialPort1_ErrorReceived);
             this.serialPort1.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort1_DataReceived);
-            // 
-            // timer_send
-            // 
-            this.timer_send.Interval = 60;
-            this.timer_send.Tick += new System.EventHandler(this.timer_send_Tick);
             // 
             // button_start
             // 
-            this.button_start.Location = new System.Drawing.Point(361, 118);
+            this.button_start.Location = new System.Drawing.Point(361, 130);
             this.button_start.Name = "button_start";
-            this.button_start.Size = new System.Drawing.Size(150, 51);
+            this.button_start.Size = new System.Drawing.Size(150, 39);
             this.button_start.TabIndex = 1;
             this.button_start.Text = "START UPDATE";
             this.button_start.UseVisualStyleBackColor = true;
@@ -288,7 +284,7 @@
             // 
             this.richTextBox1.Location = new System.Drawing.Point(361, 177);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(721, 347);
+            this.richTextBox1.Size = new System.Drawing.Size(761, 347);
             this.richTextBox1.TabIndex = 4;
             this.richTextBox1.Text = "";
             // 
@@ -302,17 +298,22 @@
             // label_cnt
             // 
             this.label_cnt.AutoSize = true;
-            this.label_cnt.Location = new System.Drawing.Point(1016, 146);
+            this.label_cnt.Location = new System.Drawing.Point(1062, 151);
             this.label_cnt.Name = "label_cnt";
             this.label_cnt.Size = new System.Drawing.Size(31, 15);
             this.label_cnt.TabIndex = 6;
             this.label_cnt.Text = "0/0";
             // 
+            // timer_monitor
+            // 
+            this.timer_monitor.Enabled = true;
+            this.timer_monitor.Tick += new System.EventHandler(this.timer_monitor_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1121, 662);
+            this.ClientSize = new System.Drawing.Size(1167, 572);
             this.Controls.Add(this.label_cnt);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.richTextBox1);
@@ -320,7 +321,9 @@
             this.Controls.Add(this.button_start);
             this.Controls.Add(this.groupBox1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.Name = "Form1";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Bootloader_debug";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);
@@ -352,7 +355,6 @@
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Timer timer_serial_port_checking;
         private System.IO.Ports.SerialPort serialPort1;
-        private System.Windows.Forms.Timer timer_send;
         private System.Windows.Forms.Button button_start;
         private System.Windows.Forms.TextBox textBox_file_path;
         private System.Windows.Forms.GroupBox groupBox2;
@@ -361,6 +363,7 @@
         private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Label label_cnt;
+        private System.Windows.Forms.Timer timer_monitor;
     }
 }
 
