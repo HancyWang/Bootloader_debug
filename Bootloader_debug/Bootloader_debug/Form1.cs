@@ -35,8 +35,8 @@ namespace Bootloader_debug
         private int m_current_Address = 0x00;
         private long m_total_to_be_written_num = 0;                           //总共要写入的次数
         private int m_current_write_cnt = 0;                             //记录当前写入的次数
-        private int m_send_fail_cnt = 0;
-        private int m_pre_send_fail_cnt = 0;
+        //private int m_send_fail_cnt = 0;
+        //private int m_pre_send_fail_cnt = 0;
 
         //private int m_shift_pos = 0;
         private List<byte> m_write_list = new List<byte>();
@@ -47,7 +47,11 @@ namespace Bootloader_debug
 
 
         private int m_BOOT_ERASE_CMD = 0x43;
+        private bool m_b_start_update = false;
 
+        private const string LOG_UPDATEING_STOP = "Updating stop!";
+        private const string LOG_HEX_FILE_LOADED_SUCCESSFUL = "Hex File loaded successful!";
+        private const string LOG_SENDING_ABORT = "Updating abort...";
 
         //dubeg专用
         //private byte test_bt = 0x00;
@@ -62,8 +66,9 @@ namespace Bootloader_debug
             STEP_NONE,
             STEP_PRE_SEND_FAIL,    //预发送失败
             STEP_SEND_FAIL,        //发送过程中失败
-            STEP_RESET,
-            STEP1,
+            //STEP_RESEND,           //发送失败，重新发送,还是从step2开始
+            STEP_START_RUNNING,    //开始运行代码
+            //STEP1,               //第一次发和重发都是从step2开始，不需要step1
             STEP2,
             STEP3,
             STEP4,
@@ -74,10 +79,12 @@ namespace Bootloader_debug
             STEP_PENDING_HEX_FILE_LOADED,
             STEP_WRITE,
             STEP_READ,
-            STEP_FINISH
+            STEP_FINISH,
+            STEP_STOP
         }
 
-        private SEND_STEP m_send_step = SEND_STEP.STEP1;
+        //private SEND_STEP m_send_step = SEND_STEP.STEP1;
+        private SEND_STEP m_send_step = SEND_STEP.STEP2;
 
         public Form1()
         {
@@ -113,10 +120,10 @@ namespace Bootloader_debug
                 this.comboBox_serial_port_name.SelectedIndex = 0;
             }
 
-            this.comboBox_serial_port_baut_rate.Text = "460800";
+            this.comboBox_serial_port_baut_rate.Text = "115200";
             this.comboBox_serial_port_data_bits.Text = "8";
             this.comboBox_serial_port_stop_bits.Text = "1";
-            this.comboBox_serial_port_parity.Text = "Odd";
+            this.comboBox_serial_port_parity.Text = "Even";
             this.comboBox_serial_port_flow_control.Text = "None";
         }
 
@@ -188,9 +195,9 @@ namespace Bootloader_debug
         private bool IsSendingAbort()
         {
             bool res = false;
-            if (m_current_write_cnt >= 10)
+            if (m_current_write_cnt >= 1)
             {
-                if (m_stop_cnt == 5)
+                if (m_stop_cnt == 2)
                 {
                     m_stop_cnt = 0;
                     m_prev_send_cnt = -1;
@@ -230,7 +237,8 @@ namespace Bootloader_debug
                 }
                 this.button_serial_port_connect.Text = "DISCONNECT";
 
-                
+                button_start.Enabled = true;
+
                 m_b_serialPortOpened = true;
                 LoadPicture();
 
@@ -243,6 +251,8 @@ namespace Bootloader_debug
             }
             else
             {
+                //m_b_start_update = false;
+
                 this.button_serial_port_connect.Text = "CONNECT";
                 this.serialPort1.Close();
                 m_b_serialPortOpened = false;
@@ -273,54 +283,75 @@ namespace Bootloader_debug
             {
                 m_buffer.AddRange(tmp);   //将tmp中的数据装入m_buffer中
                 #region
-                if(m_send_step==SEND_STEP.STEP_RESET)
-                {
-                    if (m_buffer.Count == 2 && m_buffer[0] == 0x79 && m_buffer[1] == 0x79)
-                    {
-                        m_send_step = SEND_STEP.STEP1;
-                        m_buffer.Clear();
-                        send_data_by(m_send_step);
-                    }
-                    else
-                    {
-                        m_buffer.Clear();
-                        send_data_by(SEND_STEP.STEP_RESET);
-                    }
-                    
-                }
-                else if (m_send_step == SEND_STEP.STEP1)
-                {
-                    if (m_buffer[0] == 0x79)   //如果是79，就接收数据
-                    {
-                        m_send_step = SEND_STEP.STEP2;      //如果接收到79，直接进入到第二步   
-                    }
-                    else
-                    {
-                        //do nothing
-                        //m_pre_send_fail_cnt++;
-                    }
+                #region
+                //if(m_send_step==SEND_STEP.STEP_RESEND)  //resend,发送的是的 7F 00 FF相当于发送了step1和step2
+                //{
+                //    if (m_buffer.Count == 16 && m_buffer[0] == 0x1F && m_buffer[1] == 0x79)
+                //    {
+                //        string strTmp = "Command available: ";
+                //        for (int i = 1; i < m_buffer.Count; i++)
+                //        {
+                //            strTmp += m_buffer[i].ToString("X2") + " ";
+                //        }
+                //        m_strLog_list.Add(strTmp);
 
-                    m_buffer.RemoveAt(0);
-                    send_data_by(m_send_step);
+                //        m_buffer.Clear();
+                //        show_log();
 
-                }
-                else if (m_send_step == SEND_STEP.STEP2)   //获取version+cmd
+                //        m_send_step = SEND_STEP.STEP3;
+                //        m_buffer.Clear();
+                //        send_data_by(m_send_step);
+                //    }
+                //    //else
+                //    //{
+                //    //    m_buffer.Clear();
+                //    //    send_data_by(SEND_STEP.STEP_RESET);
+                //    //}
+
+                //}
+
+                //if (m_send_step == SEND_STEP.STEP1)
+                //{
+                //    if (m_buffer[0] == 0x79)   //如果是79，就接收数据
+                //    {
+                //        m_send_step = SEND_STEP.STEP2;      //如果接收到79，直接进入到第二步   
+                //    }
+                //    else
+                //    {
+                //        //do nothing
+                //        //m_pre_send_fail_cnt++;
+                //    }
+
+                //    m_buffer.RemoveAt(0);
+                //    send_data_by(m_send_step);
+
+                //}
+                #endregion
+                if (m_send_step == SEND_STEP.STEP2)   //获取version+cmd
                 {
-                    if (m_buffer.Count == 15)
+                    if (m_buffer.Count == 16 && m_buffer[1] == 0x79)
                     {
-                        m_BOOT_ERASE_CMD = m_buffer[9];  //获取擦除命令
+                        //m_start_monitor_start = false;
+
+                        m_BOOT_ERASE_CMD = m_buffer[9 + 1];  //获取擦除命令
 
                         string strTmp = "Command available: ";
-                        for (int i = 0; i < m_buffer.Count; i++)
+                        for (int i = 1; i < m_buffer.Count; i++)
                         {
                             strTmp += m_buffer[i].ToString("X2") + " ";
                         }
-                        //m_strLog_list.Add(strTmp);
+                        m_strLog_list.Add(strTmp);
 
                         m_buffer.Clear();
                         show_log();
 
                         m_send_step = SEND_STEP.STEP3;
+                        send_data_by(m_send_step);
+                    }
+                    else if (m_buffer.Count == 1 && m_buffer[0] == 0x1F)
+                    {
+                        //m_start_monitor_start = true;
+                        m_buffer.Clear();
                         send_data_by(m_send_step);
                     }
                 }
@@ -487,7 +518,7 @@ namespace Bootloader_debug
 
                             m_send_step = SEND_STEP.STEP_FINISH;
 
-                            send_data_by(SEND_STEP.STEP_RESET);
+                            send_data_by(SEND_STEP.STEP_START_RUNNING);
 
                             //m_current_write_cnt = 0;
 
@@ -496,6 +527,10 @@ namespace Bootloader_debug
                             show_log();
 
                             MessageBox.Show("Update Finished!");
+                            //点完提示信息的按钮之后，清空log和进度条
+                            m_strLog_list.Clear();
+                            show_log();
+                            this.progressBar1.Value = 0;
                         }
                         else
                         {
@@ -518,17 +553,25 @@ namespace Bootloader_debug
                         }
 
                         this.progressBar1.Value = m_current_write_cnt;
-                        this.label_cnt.Text = (m_current_write_cnt*100/ m_total_to_be_written_num).ToString() +" " +
-                            (m_current_write_cnt).ToString() + "/" + m_total_to_be_written_num.ToString();
+                        //this.label_cnt.Text = (m_current_write_cnt*100/ m_total_to_be_written_num).ToString() +"%" +
+                        //    (m_current_write_cnt).ToString() + "/" + m_total_to_be_written_num.ToString();
+                        this.label_cnt.Text = (m_current_write_cnt * 100 / m_total_to_be_written_num).ToString() + "%";
                     }
                     else if (m_buffer.Count == 3 && m_buffer[0] == 0x79 && m_buffer[1] == 0x79 && m_buffer[2] == 0x1F)
                     {
-                        m_buffer.Clear();
+                        //出错处理
 
-                        m_current_write_cnt--;   //不管发送失败或成功，m_current_write_cnt都做了++，所以失败的时候一定要--
-                        send_data_by(m_send_step);
+                        //m_buffer.Clear();
 
-                        m_current_write_cnt++;
+                        //m_current_write_cnt--;   //不管发送失败或成功，m_current_write_cnt都做了++，所以失败的时候一定要--
+                        //send_data_by(m_send_step);
+
+                        //m_current_write_cnt++;
+
+                        m_b_start_update = false;  //
+
+                        m_strLog_list.Add("Updating fail!");
+                        show_log();
                     }
                     else
                     {
@@ -614,6 +657,11 @@ namespace Bootloader_debug
         private void show_log()
         {
             string str = "";
+            //if(IsLogContain("Updating stop!"))
+            //{
+            //    this.m_strLog_list.Clear();
+            //}
+
             for (int i = 0; i < m_strLog_list.Count; i++)
             {
                 str += m_strLog_list[i]+"\r\n";
@@ -632,29 +680,42 @@ namespace Bootloader_debug
             if(m_b_serialPortOpened==false)
             {
                 //MessageBox.Show("Serial port disconnect!");
-
                 m_send_step = SEND_STEP.STEP_SEND_FAIL;
                 return;
             }
 
             byte[] buffer = null;
-            if (step == SEND_STEP.STEP_RESET)   //作用: bootlader失败的时候，点按钮继续，先要reset，否则无法发送7F
+            //if (step == SEND_STEP.STEP_RESEND)
+            //{
+            //    buffer = new byte[] { 0x7F,0x00,0xFF };
+            //    this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
+
+            //    System.Threading.Thread.Sleep(500);
+            //}
+            if (step == SEND_STEP.STEP_START_RUNNING)   //作用: bootlader失败的时候，点按钮继续，先要reset，否则无法发送7F
             {
                 buffer = new byte[] { 0x21, 0xDE, 0x08, 0x00, 0x00, 0x00, 0x08 };
                 this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
             }
-            else if (step == SEND_STEP.STEP1)                 //第一步，发送0x7F
-            {
-                buffer = new byte[1];
-                buffer[0] = 0x7F;
-                this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
-            }
+            //else if (step == SEND_STEP.STEP1)                 //第一步，发送0x7F
+            //{
+            //    buffer = new byte[1];
+            //    buffer[0] = 0x7F;
+            //    this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
+            //}
             else if (step == SEND_STEP.STEP2)            //第二步，发送00 FF,获取Version+Command
             {
-                buffer = new byte[2];
-                buffer[0] = 0x00;
-                buffer[1] = 0xFF;
+                //buffer = new byte[2];
+                //buffer[0] = 0x00;
+                //buffer[1] = 0xFF;
+
+                buffer = new byte[3];
+                buffer[0] = 0x7F;
+                buffer[1] = 0x00;
+                buffer[2] = 0xFF;
                 this.serialPort1.Write(buffer, 0, Convert.ToInt32(buffer.Length));
+
+                System.Threading.Thread.Sleep(3000);
             }
             else if (step == SEND_STEP.STEP3)          //第三步， 发送01 FE,获取版本号
             {
@@ -878,47 +939,112 @@ namespace Bootloader_debug
 
         private void button_start_Click(object sender, EventArgs e)
         {
-            if (!m_b_serialPortOpened)  //如果串口没打开
+            //m_b_start_update = !m_b_start_update;
+            //if (m_b_start_update)
+            //{
+            //    m_strLog_list.Clear();
+            //}
+            //else
+            //{
+            //    m_strLog_list.Add("Updating stop!");
+            //    //MessageBox.Show("Updating stop!");
+            //}
+
+            //label_cnt.Text = "0%";
+
+            //show_log();
+
+            //m_buffer.Clear();
+            ////m_write_list.Clear();
+            ////m_b_load_hex_file_success = false;
+            //m_current_Address = 0x00;
+
+            //m_current_write_cnt = 0;
+            //this.progressBar1.Value = m_current_write_cnt;
+
+            ////m_total_to_be_written_num = 0;
+            //m_stop_cnt = 0;
+            //m_prev_send_cnt = -1;
+
+            //m_send_step = SEND_STEP.STEP2;
+            //send_data_by(m_send_step);
+
+
+
+
+
+
+            m_b_start_update = !m_b_start_update;
+
+            label_cnt.Text = "0%";
+            m_buffer.Clear();
+
+            m_current_Address = 0x00;
+            m_current_write_cnt = 0;
+            this.progressBar1.Value = m_current_write_cnt;
+
+            m_stop_cnt = 0;
+            m_prev_send_cnt = -1;
+
+            if (m_b_start_update)
             {
-                MessageBox.Show("Please connect serial port!");
-            }
-            else                       //串口打开才可以发送
-            {
-                label_cnt.Text = "0/0";
+                m_data_sending_abort = false;
 
-                m_strLog_list.Clear();
-                show_log();
-
-                m_buffer.Clear();
-                //m_write_list.Clear();
-                //m_b_load_hex_file_success = false;
-                m_current_Address = 0x00;
-
-                m_current_write_cnt = 0;
-                this.progressBar1.Value = m_current_write_cnt;
-
-                //m_total_to_be_written_num = 0;
-                m_stop_cnt = 0;
-                m_prev_send_cnt = -1;
-
-                //if (m_data_sending_abort)
-                //{
-                //    m_send_step = SEND_STEP.STEP_RESET;
-                //}
-
-                //m_data_sending_abort = false;
-
-                if (m_send_step == SEND_STEP.STEP_SEND_FAIL) //如果发送失败，必须要先
+                if (IsLogContain(LOG_HEX_FILE_LOADED_SUCCESSFUL))
                 {
-                    m_send_step = SEND_STEP.STEP_RESET;
+                    m_strLog_list.Clear();
+                    m_strLog_list.Add(LOG_HEX_FILE_LOADED_SUCCESSFUL);
+
+                }
+                else if(IsLogContain(LOG_UPDATEING_STOP)|| IsLogContain(LOG_SENDING_ABORT))
+                {
+                    m_strLog_list.Clear();
                 }
                 else
                 {
-                    m_send_step = SEND_STEP.STEP1;
+                    //do nothing
                 }
 
+                m_send_step = SEND_STEP.STEP2;
                 send_data_by(m_send_step);
             }
+            else
+            {
+                if (IsLogContain(LOG_UPDATEING_STOP))
+                {
+                    m_strLog_list.Clear();
+
+                    m_send_step = SEND_STEP.STEP2;
+                    send_data_by(m_send_step);
+                }
+                else
+                {
+                    m_strLog_list.Add(LOG_UPDATEING_STOP);
+
+                    m_send_step = SEND_STEP.STEP_STOP;
+                }
+                
+            }
+
+            show_log();
+
+            
+
+            //m_send_step = SEND_STEP.STEP2;
+            //send_data_by(m_send_step);
+        }
+
+        private bool IsLogContain(string str)
+        {
+            bool res = false;
+            for(int i=0;i<m_strLog_list.Count;i++)
+            {
+                if (str == m_strLog_list[i])
+                {
+                    res = true;
+                }
+            }
+            return res;
         }
 
         private void Init_member_var()
@@ -950,6 +1076,17 @@ namespace Bootloader_debug
         {
             if (this.openFileDialog1.ShowDialog() == DialogResult.OK)
             {
+                //检测文件正确性
+                string filePath = this.openFileDialog1.FileName;
+                int pos = filePath.LastIndexOf(@"\");
+                string fileName = filePath.Substring(pos + 1);
+                if (fileName.Substring(fileName.LastIndexOf(@".") + 1) != "hex")
+                {
+                    MessageBox.Show("Please choose hex file!");
+                    return;
+                }
+
+
                 Init_member_var();
 
                 #region
@@ -1001,16 +1138,26 @@ namespace Bootloader_debug
                         }
                     }
 
+                    if (m_strLog_list.Count == 0)
+                    {
+                        m_strLog_list.Add(LOG_HEX_FILE_LOADED_SUCCESSFUL);
+                    }
+                    else
+                    {
+                        m_strLog_list.Add(LOG_HEX_FILE_LOADED_SUCCESSFUL + "\r\nStarting update...");
+                    }
+
+                    show_log();
+
                     if (m_send_step == SEND_STEP.STEP_PENDING_HEX_FILE_LOADED)  //状态切换
                     {
                         m_send_step = SEND_STEP.STEP_WRITE;
                         send_data_by(m_send_step);
                         m_current_write_cnt++;
+
+                        m_b_start_update = true;
                         //m_strLog_list.RemoveAt(m_strLog_list.Count - 1);
                     }
-
-                    m_strLog_list.Add("Hex File loaded successful!");
-                    show_log();
 
                     //MessageBox.Show("Load file successful!" + "16*" + m_datas_list.Count.ToString());
                     //MessageBox.Show("Load file successful!");
@@ -1190,9 +1337,17 @@ namespace Bootloader_debug
             {
                 this.serialPort1.BaudRate = 115200;
             }
-            else if (this.comboBox_serial_port_baut_rate.Text == "460800")
+            else if (this.comboBox_serial_port_baut_rate.Text == "128000")
             {
-                this.serialPort1.BaudRate = 460800;
+                this.serialPort1.BaudRate = 128000;
+            }
+            else if (this.comboBox_serial_port_baut_rate.Text == "230400")
+            {
+                this.serialPort1.BaudRate = 230400;
+            }
+            else if (this.comboBox_serial_port_baut_rate.Text == "256000")
+            {
+                this.serialPort1.BaudRate = 256000;
             }
             else if (this.comboBox_serial_port_baut_rate.Text == "57600")
             {
@@ -1249,10 +1404,12 @@ namespace Bootloader_debug
             }
             else
             {
-                if (!m_data_sending_abort)
+                if (!m_data_sending_abort&& this.serialPort1.IsOpen)
                 {
                     if (IsSendingAbort())
                     {
+                        m_b_start_update = false;
+
                         m_data_sending_abort = true;
                         m_send_step = SEND_STEP.STEP_SEND_FAIL;
 

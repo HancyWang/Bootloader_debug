@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bootloader_debug", "Bootloader_debug\Bootloader_debug.csproj", "{58670A3E-C682-44D1-9B6C-5CE80AB501A4}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup_Bootloader", "Setup_Bootloader\Setup_Bootloader.vdproj", "{6B9989C4-902B-4180-8502-608CECB2CFF7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,8 @@ Global
 		{58670A3E-C682-44D1-9B6C-5CE80AB501A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58670A3E-C682-44D1-9B6C-5CE80AB501A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{58670A3E-C682-44D1-9B6C-5CE80AB501A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B9989C4-902B-4180-8502-608CECB2CFF7}.Debug|Any CPU.ActiveCfg = Debug
+		{6B9989C4-902B-4180-8502-608CECB2CFF7}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

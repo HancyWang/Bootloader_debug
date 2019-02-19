@@ -117,6 +117,7 @@
             // 
             this.comboBox_serial_port_parity.FormattingEnabled = true;
             this.comboBox_serial_port_parity.Items.AddRange(new object[] {
+            "Even",
             "Odd"});
             this.comboBox_serial_port_parity.Location = new System.Drawing.Point(172, 302);
             this.comboBox_serial_port_parity.Name = "comboBox_serial_port_parity";
@@ -150,8 +151,7 @@
             "38400",
             "56000",
             "57600",
-            "115200",
-            "460800"});
+            "115200"});
             this.comboBox_serial_port_baut_rate.Location = new System.Drawing.Point(172, 136);
             this.comboBox_serial_port_baut_rate.Name = "comboBox_serial_port_baut_rate";
             this.comboBox_serial_port_baut_rate.Size = new System.Drawing.Size(121, 23);
@@ -240,6 +240,7 @@
             // 
             // button_start
             // 
+            this.button_start.Enabled = false;
             this.button_start.Location = new System.Drawing.Point(361, 130);
             this.button_start.Name = "button_start";
             this.button_start.Size = new System.Drawing.Size(150, 39);
@@ -300,13 +301,14 @@
             this.label_cnt.AutoSize = true;
             this.label_cnt.Location = new System.Drawing.Point(1062, 151);
             this.label_cnt.Name = "label_cnt";
-            this.label_cnt.Size = new System.Drawing.Size(31, 15);
+            this.label_cnt.Size = new System.Drawing.Size(23, 15);
             this.label_cnt.TabIndex = 6;
-            this.label_cnt.Text = "0/0";
+            this.label_cnt.Text = "0%";
             // 
             // timer_monitor
             // 
             this.timer_monitor.Enabled = true;
+            this.timer_monitor.Interval = 200;
             this.timer_monitor.Tick += new System.EventHandler(this.timer_monitor_Tick);
             // 
             // Form1
@@ -324,7 +326,7 @@
             this.MaximizeBox = false;
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Bootloader_debug";
+            this.Text = "Bootloader(V1.0.1)";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
