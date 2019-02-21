@@ -149,8 +149,8 @@ namespace Bootloader
                 this.comboBox_serial_port_name.SelectedIndex = 0;
             }
 
-            //this.comboBox_serial_port_baut_rate.Text = "115200";
-            this.comboBox_serial_port_baut_rate.Text = "19200";
+            this.comboBox_serial_port_baut_rate.Text = "115200";
+            //this.comboBox_serial_port_baut_rate.Text = "19200";
             this.comboBox_serial_port_data_bits.Text = "8";
             this.comboBox_serial_port_stop_bits.Text = "1";
             this.comboBox_serial_port_parity.Text = "Even";
