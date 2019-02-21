@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.421
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bootloader", "Bootloader\Bootloader.csproj", "{48ED222F-B24B-4E5D-9C7D-98F2FB3F1C45}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{48ED222F-B24B-4E5D-9C7D-98F2FB3F1C45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48ED222F-B24B-4E5D-9C7D-98F2FB3F1C45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48ED222F-B24B-4E5D-9C7D-98F2FB3F1C45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48ED222F-B24B-4E5D-9C7D-98F2FB3F1C45}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {78F2645B-4A40-43D3-AF69-D3DE35CF313A}
+	EndGlobalSection
+EndGlobal

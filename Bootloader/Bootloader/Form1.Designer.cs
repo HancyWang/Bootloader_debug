@@ -1,16 +1,16 @@
-﻿namespace Bootloader_debug
+﻿namespace Bootloader
 {
     partial class Form1
     {
         /// <summary>
-        /// 必需的设计器变量。
+        /// Required designer variable.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
         /// <summary>
-        /// 清理所有正在使用的资源。
+        /// Clean up any resources being used.
         /// </summary>
-        /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -20,11 +20,11 @@
             base.Dispose(disposing);
         }
 
-        #region Windows 窗体设计器生成的代码
+        #region Windows Form Designer generated code
 
         /// <summary>
-        /// 设计器支持所需的方法 - 不要修改
-        /// 使用代码编辑器修改此方法的内容。
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent()
         {
@@ -45,17 +45,18 @@
             this.label13 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
-            this.timer_serial_port_checking = new System.Windows.Forms.Timer(this.components);
-            this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
-            this.button_start = new System.Windows.Forms.Button();
-            this.textBox_file_path = new System.Windows.Forms.TextBox();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.button_load_hex_file = new System.Windows.Forms.Button();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.button1 = new System.Windows.Forms.Button();
+            this.button_load_hex_file = new System.Windows.Forms.Button();
+            this.textBox_file_path = new System.Windows.Forms.TextBox();
+            this.button_start = new System.Windows.Forms.Button();
             this.label_cnt = new System.Windows.Forms.Label();
-            this.timer_monitor = new System.Windows.Forms.Timer(this.components);
+            this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox_serial_port_connecting)).BeginInit();
             this.groupBox2.SuspendLayout();
@@ -77,22 +78,22 @@
             this.groupBox1.Controls.Add(this.label13);
             this.groupBox1.Controls.Add(this.label12);
             this.groupBox1.Controls.Add(this.label11);
-            this.groupBox1.Location = new System.Drawing.Point(12, 12);
+            this.groupBox1.Location = new System.Drawing.Point(23, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(331, 512);
-            this.groupBox1.TabIndex = 0;
+            this.groupBox1.Size = new System.Drawing.Size(331, 543);
+            this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Serial Port ";
             // 
             // button_serial_port_connect
             // 
-            this.button_serial_port_connect.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.button_serial_port_connect.BackColor = System.Drawing.SystemColors.Control;
             this.button_serial_port_connect.Location = new System.Drawing.Point(172, 416);
             this.button_serial_port_connect.Name = "button_serial_port_connect";
             this.button_serial_port_connect.Size = new System.Drawing.Size(99, 49);
             this.button_serial_port_connect.TabIndex = 27;
             this.button_serial_port_connect.Text = "CONNECT";
-            this.button_serial_port_connect.UseVisualStyleBackColor = false;
+            this.button_serial_port_connect.UseVisualStyleBackColor = true;
             this.button_serial_port_connect.Click += new System.EventHandler(this.button_serial_port_connect_Click);
             // 
             // pictureBox_serial_port_connecting
@@ -156,7 +157,7 @@
             this.comboBox_serial_port_baut_rate.Name = "comboBox_serial_port_baut_rate";
             this.comboBox_serial_port_baut_rate.Size = new System.Drawing.Size(121, 23);
             this.comboBox_serial_port_baut_rate.TabIndex = 21;
-            this.comboBox_serial_port_baut_rate.SelectedIndexChanged += new System.EventHandler(this.comboBox_serial_port_baut_rate_SelectedIndexChanged);
+            this.comboBox_serial_port_baut_rate.SelectedValueChanged += new System.EventHandler(this.comboBox_serial_port_baut_rate_SelectedValueChanged);
             // 
             // comboBox_serial_port_name
             // 
@@ -225,51 +226,48 @@
             this.label11.TabIndex = 14;
             this.label11.Text = "Port Name:";
             // 
-            // timer_serial_port_checking
+            // progressBar1
             // 
-            this.timer_serial_port_checking.Enabled = true;
-            this.timer_serial_port_checking.Interval = 60;
-            this.timer_serial_port_checking.Tick += new System.EventHandler(this.timer_serial_port_checking_Tick);
+            this.progressBar1.Location = new System.Drawing.Point(533, 159);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(462, 23);
+            this.progressBar1.TabIndex = 9;
             // 
-            // serialPort1
+            // richTextBox1
             // 
-            this.serialPort1.BaudRate = 115200;
-            this.serialPort1.Parity = System.IO.Ports.Parity.Odd;
-            this.serialPort1.ErrorReceived += new System.IO.Ports.SerialErrorReceivedEventHandler(this.serialPort1_ErrorReceived);
-            this.serialPort1.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort1_DataReceived);
-            // 
-            // button_start
-            // 
-            this.button_start.Enabled = false;
-            this.button_start.Location = new System.Drawing.Point(361, 130);
-            this.button_start.Name = "button_start";
-            this.button_start.Size = new System.Drawing.Size(150, 39);
-            this.button_start.TabIndex = 1;
-            this.button_start.Text = "START UPDATE";
-            this.button_start.UseVisualStyleBackColor = true;
-            this.button_start.Click += new System.EventHandler(this.button_start_Click);
-            // 
-            // textBox_file_path
-            // 
-            this.textBox_file_path.Location = new System.Drawing.Point(7, 24);
-            this.textBox_file_path.Name = "textBox_file_path";
-            this.textBox_file_path.Size = new System.Drawing.Size(559, 25);
-            this.textBox_file_path.TabIndex = 2;
+            this.richTextBox1.Location = new System.Drawing.Point(377, 190);
+            this.richTextBox1.Name = "richTextBox1";
+            this.richTextBox1.Size = new System.Drawing.Size(748, 365);
+            this.richTextBox1.TabIndex = 8;
+            this.richTextBox1.Text = "";
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.button1);
             this.groupBox2.Controls.Add(this.button_load_hex_file);
             this.groupBox2.Controls.Add(this.textBox_file_path);
-            this.groupBox2.Location = new System.Drawing.Point(361, 12);
+            this.groupBox2.Location = new System.Drawing.Point(377, 25);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(748, 82);
-            this.groupBox2.TabIndex = 3;
+            this.groupBox2.Size = new System.Drawing.Size(748, 112);
+            this.groupBox2.TabIndex = 7;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Load Hex File";
             // 
+            // button1
+            // 
+            this.button1.Enabled = false;
+            this.button1.Location = new System.Drawing.Point(7, 64);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(170, 32);
+            this.button1.TabIndex = 4;
+            this.button1.Text = "CONVERT TO BIN";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Visible = false;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // button_load_hex_file
             // 
-            this.button_load_hex_file.Location = new System.Drawing.Point(621, 24);
+            this.button_load_hex_file.Location = new System.Drawing.Point(611, 24);
             this.button_load_hex_file.Name = "button_load_hex_file";
             this.button_load_hex_file.Size = new System.Drawing.Size(94, 27);
             this.button_load_hex_file.TabIndex = 3;
@@ -277,45 +275,57 @@
             this.button_load_hex_file.UseVisualStyleBackColor = true;
             this.button_load_hex_file.Click += new System.EventHandler(this.button_load_hex_file_Click);
             // 
-            // openFileDialog1
+            // textBox_file_path
             // 
-            this.openFileDialog1.FileName = "openFileDialog1";
+            this.textBox_file_path.Location = new System.Drawing.Point(7, 24);
+            this.textBox_file_path.Name = "textBox_file_path";
+            this.textBox_file_path.Size = new System.Drawing.Size(572, 25);
+            this.textBox_file_path.TabIndex = 2;
             // 
-            // richTextBox1
+            // button_start
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(361, 177);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(761, 347);
-            this.richTextBox1.TabIndex = 4;
-            this.richTextBox1.Text = "";
-            // 
-            // progressBar1
-            // 
-            this.progressBar1.Location = new System.Drawing.Point(517, 146);
-            this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(462, 23);
-            this.progressBar1.TabIndex = 5;
+            this.button_start.Enabled = false;
+            this.button_start.Location = new System.Drawing.Point(377, 148);
+            this.button_start.Name = "button_start";
+            this.button_start.Size = new System.Drawing.Size(150, 39);
+            this.button_start.TabIndex = 6;
+            this.button_start.Text = "UPDATE START";
+            this.button_start.UseVisualStyleBackColor = true;
+            this.button_start.Click += new System.EventHandler(this.button_start_Click);
             // 
             // label_cnt
             // 
             this.label_cnt.AutoSize = true;
-            this.label_cnt.Location = new System.Drawing.Point(1062, 151);
+            this.label_cnt.Location = new System.Drawing.Point(1059, 167);
             this.label_cnt.Name = "label_cnt";
             this.label_cnt.Size = new System.Drawing.Size(23, 15);
-            this.label_cnt.TabIndex = 6;
+            this.label_cnt.TabIndex = 10;
             this.label_cnt.Text = "0%";
             // 
-            // timer_monitor
+            // serialPort1
             // 
-            this.timer_monitor.Enabled = true;
-            this.timer_monitor.Interval = 200;
-            this.timer_monitor.Tick += new System.EventHandler(this.timer_monitor_Tick);
+            this.serialPort1.BaudRate = 19200;
+            this.serialPort1.Parity = System.IO.Ports.Parity.Even;
+            this.serialPort1.DataReceived += new System.IO.Ports.SerialDataReceivedEventHandler(this.serialPort1_DataReceived);
+            // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.FileName = "openFileDialog1";
+            // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // saveFileDialog1
+            // 
+            this.saveFileDialog1.Filter = "Hex File(*.bin)|*.bin|All Files(*.*)|*.*";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1167, 572);
+            this.ClientSize = new System.Drawing.Size(1155, 602);
             this.Controls.Add(this.label_cnt);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.richTextBox1);
@@ -326,7 +336,8 @@
             this.MaximizeBox = false;
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Bootloader(V1.0.1)";
+            this.Text = "Bootloader(1.0.2)";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -355,17 +366,18 @@
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.Timer timer_serial_port_checking;
-        private System.IO.Ports.SerialPort serialPort1;
-        private System.Windows.Forms.Button button_start;
-        private System.Windows.Forms.TextBox textBox_file_path;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.RichTextBox richTextBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Button button_load_hex_file;
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
-        private System.Windows.Forms.RichTextBox richTextBox1;
-        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.TextBox textBox_file_path;
+        private System.Windows.Forms.Button button_start;
+        private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Label label_cnt;
-        private System.Windows.Forms.Timer timer_monitor;
+        private System.IO.Ports.SerialPort serialPort1;
+        private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
     }
 }
 
