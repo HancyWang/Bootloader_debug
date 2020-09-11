@@ -459,7 +459,7 @@ namespace Bootloader
             m_send_fail_cnt = 0;
             //m_fileName = "";
         }
-
+        //int index = 0;
         private void Parse_Hex_2_bin_list()
         {
             bool b_start = false;
@@ -504,11 +504,28 @@ namespace Bootloader
                     else if (m_hex_file_list[i] == 0x3A && m_hex_file_list[i + 1] == 0x30 && m_hex_file_list[i + 2] == 0x32)   //直接过滤掉  3A 30 32(:02),跳过
                     {
                         i += 17;   //碰到表示地址的，直接跳到下一条数据
+
+                        //index++;
+                        //if (index == 13)
+                        //{
+                        //    MessageBox.Show("attention");
+                        //}
                     }
-                    else if (m_hex_file_list[i] == 0x3A && m_hex_file_list[i + 1] == 0x30 && m_hex_file_list[i + 2] == 0x34)  //如果到这里来了,结束
+                    else if (m_hex_file_list[i] == ':' && m_hex_file_list[i + 1] == '0' && m_hex_file_list[i + 2] == 'C')  // :0C 是什么？ 现在等同于:04处理了
+                    {
+                        //MessageBox.Show("注意了");
+                        i = m_hex_file_list.Count;
+                        //break;
+                    }
+                    else if (m_hex_file_list[i] == 0x3A && m_hex_file_list[i + 1] == 0x30 && m_hex_file_list[i + 2] == 0x34)  //如果到这里来了,结束 (:04)
                     {
                         i = m_hex_file_list.Count;
                     }
+
+                    //if (i >= len)
+                    //{
+                    //    break;
+                    //}
                 }
 
             }
